@@ -20,3 +20,9 @@ export 'src/exceptions.dart'
 export 'src/gamif_tracker.dart' show GamifSDK, GamifTracker;
 
 export 'src/widgets/gamif_points_widget.dart';
+
+export 'src/widgets/gamif_widget.dart'
+    show GamifWidget, GamifDisplay, GamifContent, GamifWidgetConfig;
+
+export 'src/widgets/gamif_badge_widget.dart' show GamifBadgeWidget;
+

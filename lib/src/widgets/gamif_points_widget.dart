@@ -4,13 +4,12 @@ import '../gamification_sdk.dart';
 import '../models.dart';
 
 // ✅ Stream global — déclenché à chaque nouvelle récompense
-final StreamController<void> _pointsRefreshController =
+final StreamController<void> gamifRefreshController =
     StreamController<void>.broadcast();
 
-// Appelé par GamifTracker après chaque track() réussi
 void notifyPointsUpdated() {
-  if (!_pointsRefreshController.isClosed) {
-    _pointsRefreshController.add(null);
+  if (!gamifRefreshController.isClosed) {
+    gamifRefreshController.add(null);
   }
 }
 
@@ -43,7 +42,7 @@ class _GamifPointsWidgetState extends State<GamifPointsWidget> {
     _fetchPoints();
 
     // ✅ Écouter les nouvelles récompenses → refresh automatique
-    _sub = _pointsRefreshController.stream.listen((_) {
+   _sub = gamifRefreshController.stream.listen((_) {
       _fetchPoints();
     });
   }

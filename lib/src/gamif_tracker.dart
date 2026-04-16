@@ -1,6 +1,6 @@
 import 'gamification_sdk.dart';
 import 'widgets/gamif_points_widget.dart';
-
+import 'models.dart';
 
 class GamifTracker {
   static Future<void> track(
