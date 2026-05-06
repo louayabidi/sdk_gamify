@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../gamification_sdk.dart';
-import '../models.dart';
+import '../gamification_sdk.dart';  
+import '../models.dart';      
+
 
 // ✅ Stream global — déclenché à chaque nouvelle récompense
 final StreamController<void> gamifRefreshController =

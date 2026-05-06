@@ -31,12 +31,16 @@ class _GamifBadgeWidgetState extends State<GamifBadgeWidget> {
   bool _loading = true;
   StreamSubscription<void>? _sub;
 
-  @override
-  void initState() {
-    super.initState();
+ @override
+void initState() {
+  super.initState();
+  _fetchProfile();
+
+  //  refresh stream as GamifPointsWidget
+  _sub = gamifRefreshController.stream.listen((_) {
     _fetchProfile();
-    
-  }
+  });
+}
 
   @override
   void dispose() {
@@ -103,8 +107,7 @@ class _GamifBadgeWidgetState extends State<GamifBadgeWidget> {
             children: [
               Icon(Icons.military_tech, size: 14, color: widget.accentColor),
               const SizedBox(width: 4),
-              Text(
-                'Badge #${b.badgeId}',
+              Text(b.name.isNotEmpty ? b.name : 'Badge #${b.badgeId}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -138,25 +141,30 @@ class _GamifBadgeWidgetState extends State<GamifBadgeWidget> {
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: widget.backgroundColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.military_tech,
-                  size: 18,
-                  color: widget.accentColor,
-                ),
-              ),
+  width: 36,
+  height: 36,
+  decoration: BoxDecoration(
+    color: widget.backgroundColor.withOpacity(0.15),
+    borderRadius: BorderRadius.circular(8),
+  ),
+  child: b.imageUrl.isNotEmpty
+      ? ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            b.imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) =>
+                Icon(Icons.military_tech, size: 18, color: widget.accentColor),
+          ),
+        )
+      : Icon(Icons.military_tech, size: 18, color: widget.accentColor),
+),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Badge #${b.badgeId}',
+                   Text(b.name.isNotEmpty ? b.name : 'Badge #${b.badgeId}',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

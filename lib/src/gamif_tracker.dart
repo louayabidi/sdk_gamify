@@ -1,36 +1,45 @@
+// lib/src/gamif_tracker.dart
 import 'gamification_sdk.dart';
 import 'widgets/gamif_points_widget.dart';
+import 'gamif_reward_notifier.dart'; // ← NEW
 import 'models.dart';
 
 class GamifTracker {
+  /// Track an event.
+  ///
+  /// Badge rewards are automatically broadcast to [GamifRewardNotifier]
+  /// inside [GamificationSDK.track], so the app-level
+  /// [GamifCelebrationOverlay] will show the animation without any
+  /// additional wiring here.
   static Future<void> track(
     String eventName, {
     Map<String, dynamic>? data,
   }) async {
     if (!GamificationSDK.isInitialized) {
-      print('[GamifTracker] ⚠️ SDK non initialisé');
+      print('[GamifTracker] ⚠️ SDK not initialized');
       return;
     }
     try {
-      if (!GamificationSDK.instance.hasUser) {
-        final anonymousId = 'anon_${DateTime.now().millisecondsSinceEpoch}';
-        await GamificationSDK.instance.identify(anonymousId);
-      }
+      final rewards = await GamificationSDK.instance
+          .track(eventName, data: data);
 
-      final rewards = await GamificationSDK.instance.track(eventName, data: data);
-      print('[GamifTracker] ✅ "$eventName" envoyé');
+      print('[GamifTracker] ✅ "$eventName" sent — '
+          '${rewards.length} reward(s)');
 
-      //  Si des points ont été gagnés → refresh immédiat du widget
+      // Refresh the points widget if any points were awarded
       if (rewards.any((r) => r.isPoints)) {
         notifyPointsUpdated();
-        print('[GamifTracker] 🔄 Points mis à jour');
+        print('[GamifTracker] 🔄 Points widget refreshed');
       }
 
+      // Badge rewards are already pushed to GamifRewardNotifier by the SDK.
+      // GamifCelebrationOverlay (placed in MaterialApp builder) will catch them.
     } catch (e) {
-      print('[GamifTracker] ❌ Erreur sur "$eventName": $e');
+      print('[GamifTracker] ❌ Error on "$eventName": $e');
     }
   }
 }
+
 class GamifSDK {
   static Future<void> init({
     required String apiKey,
@@ -38,10 +47,14 @@ class GamifSDK {
     void Function(List<GamificationReward> rewards)? onReward,
   }) async {
     await GamificationSDK.initialize(
-      apiKey: apiKey,
+      apiKey : apiKey,
       baseUrl: baseUrl,
-      onReward: onReward, //  brancher le callback
     );
-    print('[GamifSDK] ✅ SDK initialisé — baseUrl: $baseUrl');
+    if (onReward != null) {
+      GamificationSDK.instance.onRewardReceived = (reward) {
+        onReward([reward]);
+      };
+    }
+    print('[GamifSDK] ✅ Initialized — baseUrl: $baseUrl');
   }
 }
