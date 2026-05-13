@@ -8,7 +8,12 @@ import '../gamification_sdk.dart';
 import '../models.dart';
 import 'gamif_points_widget.dart' show gamifRefreshController;
 import 'gamif_badge_celebration.dart';
-
+import 'gamif_streak_level_widget.dart';
+// ADD AFTER existing imports:
+import 'gamif_premium_streak_widget.dart';
+import 'gamif_premium_level_widget.dart';
+import 'gamif_premium_streak_section.dart';
+import 'gamif_premium_level_section.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models
 // ─────────────────────────────────────────────────────────────────────────────
@@ -170,6 +175,8 @@ class _GamifPageState extends State<GamifPage> with TickerProviderStateMixin {
   PointsBalance?       _points;
   GamificationProfile? _profile;
   _LeaderboardData?    _leaderboard;
+  List<UserStreakInfo>  _streaks = [];
+  List<UserLevelInfo>  _levels  = [];
   bool                 _loading = true;
   StreamSubscription<void>? _refreshSub;
 
@@ -237,6 +244,8 @@ class _GamifPageState extends State<GamifPage> with TickerProviderStateMixin {
         GamificationSDK.instance.getUserProfile(),
         GamificationSDK.instance.httpClient.get(
             '/api/gamif-page/public/${widget.apiKey}/leaderboard?userId=$userId'),
+        GamificationSDK.instance.getStreaks(),
+        GamificationSDK.instance.getLevels(),
       ]);
       if (!mounted) return;
       final pts = (results[0] as PointsBalance).balance;
@@ -246,6 +255,8 @@ class _GamifPageState extends State<GamifPage> with TickerProviderStateMixin {
         _points      = results[0] as PointsBalance;
         _profile     = results[1] as GamificationProfile;
         _leaderboard = _LeaderboardData.fromJson(results[2] as Map<String, dynamic>);
+        _streaks     = results[3] as List<UserStreakInfo>;
+        _levels      = results[4] as List<UserLevelInfo>;
       });
     } catch (e) {
       debugPrint('[GamifPage] live data error: $e');
@@ -342,6 +353,7 @@ class _GamifPageState extends State<GamifPage> with TickerProviderStateMixin {
           points        : _displayedPoints,
           lifetimeEarned: _points?.lifetimeEarned ?? 0,
           profile       : _profile,
+          streaks       : _streaks,
           primaryColor  : primary,
           textColor     : text,
           animate       : cfg.animate,
@@ -387,6 +399,22 @@ class _GamifPageState extends State<GamifPage> with TickerProviderStateMixin {
           accentColor: accent,
           radius     : radius,
         );
+      case 'streak':
+        return GamifStreakSection(
+          title      : s.title,
+          cardColor  : cardBg,
+          textColor  : text,
+          accentColor: accent,
+          radius     : radius,
+        );
+      case 'level':
+        return GamifLevelSection(
+          title      : s.title,
+          cardColor  : cardBg,
+          textColor  : text,
+          accentColor: accent,
+          radius     : radius,
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -411,6 +439,7 @@ class _HeroSection extends StatelessWidget {
   final _Section section;
   final int points, lifetimeEarned;
   final GamificationProfile? profile;
+  final List<UserStreakInfo> streaks;
   final Color primaryColor, textColor;
   final bool animate;
 
@@ -419,6 +448,7 @@ class _HeroSection extends StatelessWidget {
     required this.points,
     required this.lifetimeEarned,
     required this.profile,
+    required this.streaks,
     required this.primaryColor,
     required this.textColor,
     required this.animate,
@@ -428,6 +458,11 @@ class _HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final showStreak   = section.config['showStreak']   as bool? ?? true;
     final showLifetime = section.config['showLifetime'] as bool? ?? true;
+
+    // Pick first active streak — or null if none configured
+    final streak      = streaks.isNotEmpty ? streaks.first : null;
+    final streakDays  = streak?.currentStreak ?? 0;
+    final streakLabel = streak?.streakName ?? 'Day Streak';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -529,7 +564,12 @@ class _HeroSection extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         if (showStreak)
-                          _heroStat('🔥', '7', 'Day Streak', textColor),
+                          _heroStat(
+                            streakDays > 0 ? '🔥' : '💤',
+                            '$streakDays',
+                            streakLabel,
+                            textColor,
+                          ),
                         if (showStreak && showLifetime)
                           Container(
                               width: 1,

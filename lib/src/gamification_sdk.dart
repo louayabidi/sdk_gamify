@@ -165,29 +165,23 @@ class GamificationSDK {
     return WidgetConfig.fromJson(json as Map<String, dynamic>);
   }
 
-  // ── NEW: get all active streaks for this user ─────────────────────────────
-  Future<List<UserStreakInfo>> getStreaks() async {
-    if (!hasUser) throw NoUserIdentifiedException();
-    final appId = _resolveAppId();
-    final json  = await httpClient
-        .get('/api/streaks/user/$currentUserId?appId=$appId');
-    final list  = json is List ? json : <dynamic>[];
-    return list
-        .map((j) => UserStreakInfo.fromJson(j as Map<String, dynamic>))
-        .toList();
-  }
+ Future<List<UserStreakInfo>> getStreaks() async {
+  if (!hasUser) throw NoUserIdentifiedException();
+  final json = await httpClient.get('/api/streaks/user/$currentUserId');
+  final list = json is List ? json : <dynamic>[];
+  return list
+      .map((j) => UserStreakInfo.fromJson(j as Map<String, dynamic>))
+      .toList();
+}
 
-  // ── NEW: get all active levels for this user ──────────────────────────────
-  Future<List<UserLevelInfo>> getLevels() async {
-    if (!hasUser) throw NoUserIdentifiedException();
-    final appId = _resolveAppId();
-    final json  = await httpClient
-        .get('/api/levels/user/$currentUserId?appId=$appId');
-    final list  = json is List ? json : <dynamic>[];
-    return list
-        .map((j) => UserLevelInfo.fromJson(j as Map<String, dynamic>))
-        .toList();
-  }
+Future<List<UserLevelInfo>> getLevels() async {
+  if (!hasUser) throw NoUserIdentifiedException();
+  final json = await httpClient.get('/api/levels/user/$currentUserId');
+  final list = json is List ? json : <dynamic>[];
+  return list
+      .map((j) => UserLevelInfo.fromJson(j as Map<String, dynamic>))
+      .toList();
+}
 
   Future<List<GamificationReward>> track(
     String eventName, {

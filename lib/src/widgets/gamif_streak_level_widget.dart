@@ -1,10 +1,7 @@
 // lib/src/widgets/gamif_streak_level_widget.dart
-//
-// Standalone widgets for streaks and levels.
-// Used by GamifPage sections and can be embedded independently.
-// ─────────────────────────────────────────────────────────────────────────────
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../gamification_sdk.dart';
 import '../models.dart';
@@ -15,11 +12,11 @@ import 'gamif_points_widget.dart' show gamifRefreshController;
 // ═════════════════════════════════════════════════════════════════════════════
 
 class GamifStreakSection extends StatefulWidget {
-  final String  title;
-  final Color   cardColor;
-  final Color   textColor;
-  final Color   accentColor;
-  final double  radius;
+  final String title;
+  final Color  cardColor;
+  final Color  textColor;
+  final Color  accentColor;
+  final double radius;
 
   const GamifStreakSection({
     super.key,
@@ -47,7 +44,10 @@ class _GamifStreakSectionState extends State<GamifStreakSection> {
   }
 
   @override
-  void dispose() { _sub?.cancel(); super.dispose(); }
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _fetchStreaks() async {
     if (!GamificationSDK.isInitialized || !GamificationSDK.instance.hasUser) {
@@ -82,7 +82,6 @@ class _GamifStreakSectionState extends State<GamifStreakSection> {
                     fontWeight: FontWeight.w700, fontSize: 14)),
           ]),
           const SizedBox(height: 14),
-
           if (_loading)
             const Center(child: CircularProgressIndicator(strokeWidth: 2))
           else if (_streaks.isEmpty)
@@ -91,10 +90,10 @@ class _GamifStreakSectionState extends State<GamifStreakSection> {
                     fontSize: 12))
           else
             ..._streaks.map((s) => _StreakCard(
-              streak: s,
-              textColor: widget.textColor,
+              streak     : s,
+              textColor  : widget.textColor,
               accentColor: widget.accentColor,
-              cardColor: widget.cardColor,
+              cardColor  : widget.cardColor,
             )),
         ],
       ),
@@ -128,21 +127,20 @@ class _StreakCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
           Row(children: [
             Expanded(
               child: Text(streak.streakName,
                   style: TextStyle(color: textColor,
                       fontSize: 13, fontWeight: FontWeight.w700)),
             ),
-            // Freeze tokens
             if (streak.freezeTokens > 0)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFF87CEEB).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF87CEEB).withOpacity(0.3)),
+                  border: Border.all(
+                      color: const Color(0xFF87CEEB).withOpacity(0.3)),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const Text('❄️', style: TextStyle(fontSize: 11)),
@@ -154,10 +152,7 @@ class _StreakCard extends StatelessWidget {
               ),
           ]),
           const SizedBox(height: 10),
-
-          // Main streak display
           Row(children: [
-            // Flame + count
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -166,7 +161,8 @@ class _StreakCard extends StatelessWidget {
               ),
               child: Text(
                 streak.currentStreak > 0
-                    ? _flameForStreak(streak.currentStreak) : '💤',
+                    ? _flameForStreak(streak.currentStreak)
+                    : '💤',
                 style: const TextStyle(fontSize: 24),
               ),
             ),
@@ -186,7 +182,6 @@ class _StreakCard extends StatelessWidget {
                       fontSize: 11)),
             ]),
             const Spacer(),
-            // Window type badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -253,7 +248,8 @@ class _GamifLevelSectionState extends State<GamifLevelSection>
     super.initState();
     _progressCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1000));
-    _progressAnim = CurvedAnimation(parent: _progressCtrl, curve: Curves.easeOut);
+    _progressAnim = CurvedAnimation(
+        parent: _progressCtrl, curve: Curves.easeOut);
     _fetchLevels();
     _sub = gamifRefreshController.stream.listen((_) => _fetchLevels());
   }
@@ -301,7 +297,6 @@ class _GamifLevelSectionState extends State<GamifLevelSection>
                     fontWeight: FontWeight.w700, fontSize: 14)),
           ]),
           const SizedBox(height: 14),
-
           if (_loading)
             const Center(child: CircularProgressIndicator(strokeWidth: 2))
           else if (_levels.isEmpty)
@@ -310,9 +305,9 @@ class _GamifLevelSectionState extends State<GamifLevelSection>
                     fontSize: 12))
           else
             ..._levels.map((l) => _LevelCard(
-              level: l,
-              textColor: widget.textColor,
-              accentColor: widget.accentColor,
+              level       : l,
+              textColor   : widget.textColor,
+              accentColor : widget.accentColor,
               progressAnim: _progressAnim,
             )),
         ],
@@ -321,9 +316,25 @@ class _GamifLevelSectionState extends State<GamifLevelSection>
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Top-level helper — accessible by _LevelCard without needing a class instance
+// ─────────────────────────────────────────────────────────────────────────────
+
+String? _getTitleForLevel(UserLevelInfo level) {
+  if (level.levelTitlesJson == null || level.levelTitlesJson!.isEmpty) return null;
+  try {
+    final map = jsonDecode(level.levelTitlesJson!) as Map<String, dynamic>;
+    return map['${level.currentLevel}'] as String?;
+  } catch (_) {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _LevelCard extends StatelessWidget {
-  final UserLevelInfo  level;
-  final Color          textColor, accentColor;
+  final UserLevelInfo     level;
+  final Color             textColor, accentColor;
   final Animation<double> progressAnim;
 
   const _LevelCard({
@@ -335,6 +346,9 @@ class _LevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Resolve optional title from levelTitlesJson
+    final title = _getTitleForLevel(level);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -345,12 +359,14 @@ class _LevelCard extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        // Level name + title
+        // Level name + optional title badge
         Row(children: [
-          Expanded(child: Text(level.levelName,
-              style: TextStyle(color: textColor,
-                  fontSize: 13, fontWeight: FontWeight.w700))),
-          if (level.title.isNotEmpty)
+          Expanded(
+            child: Text(level.levelName,
+                style: TextStyle(color: textColor,
+                    fontSize: 13, fontWeight: FontWeight.w700)),
+          ),
+          if (title != null && title.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -358,14 +374,14 @@ class _LevelCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: accentColor.withOpacity(0.3)),
               ),
-              child: Text(level.title,
+              child: Text(title,
                   style: TextStyle(color: accentColor,
                       fontSize: 10, fontWeight: FontWeight.w700)),
             ),
         ]),
         const SizedBox(height: 12),
 
-        // Level number display
+        // Level number + XP progress
         Row(children: [
           Container(
             width: 52, height: 52,
@@ -375,7 +391,8 @@ class _LevelCard extends StatelessWidget {
                 accentColor.withOpacity(0.25),
                 accentColor.withOpacity(0.08),
               ]),
-              border: Border.all(color: accentColor.withOpacity(0.5), width: 1.5),
+              border: Border.all(
+                  color: accentColor.withOpacity(0.5), width: 1.5),
             ),
             child: Center(
               child: Text('${level.currentLevel}',
@@ -385,9 +402,11 @@ class _LevelCard extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // XP label
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                 Text('${level.currentXp} / ${level.nextThreshold} XP',
                     style: TextStyle(color: textColor, fontSize: 12,
                         fontWeight: FontWeight.w600)),
@@ -401,7 +420,8 @@ class _LevelCard extends StatelessWidget {
               AnimatedBuilder(
                 animation: progressAnim,
                 builder: (_, __) {
-                  final animatedPct = level.progressFraction * progressAnim.value;
+                  final animatedPct =
+                      level.progressFraction * progressAnim.value;
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(999),
                     child: Stack(children: [
@@ -436,9 +456,12 @@ class _LevelCard extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 5),
-              Text('Total XP: ${_fmt(level.totalXp)} · Level ${level.currentLevel}/${level.maxLevel}',
-                  style: TextStyle(color: textColor.withOpacity(0.3),
-                      fontSize: 10)),
+              Text(
+                'Total XP: ${_fmt(level.totalXp)} · '
+                'Level ${level.currentLevel}/${level.maxLevel}',
+                style: TextStyle(
+                    color: textColor.withOpacity(0.3), fontSize: 10),
+              ),
             ]),
           ),
         ]),

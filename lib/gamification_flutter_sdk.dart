@@ -35,3 +35,27 @@ export 'src/widgets/gamif_widget_config.dart';   // GamifWidgetConfig, GamifDisp
 
 export 'src/widgets/gamif_celebration_overlay.dart'  // ← THIS was missing
     show GamifCelebrationOverlay;
+
+
+export 'src/widgets/gamif_premium_streak_widget.dart'
+    show
+        PremiumStreakCard,
+        StreakTier,
+        StreakTierStyle,
+        AnimatedCountingNumber,
+        ShimmerEffect,
+        RotatingGradientBg;
+
+export 'src/widgets/gamif_premium_level_widget.dart'
+    show
+        PremiumLevelCard,
+        LevelTier,
+        LevelTierStyle,
+        AnimatedProgressBar,
+        XPCounter;
+
+export 'src/widgets/gamif_premium_streak_section.dart'
+    show GamifPremiumStreakSection;
+
+export 'src/widgets/gamif_premium_level_section.dart'
+    show GamifPremiumLevelSection;
